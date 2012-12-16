@@ -10,18 +10,22 @@
 # All libraries will have a second part that acts as a prefix
 # finally there will be an actual human readable name
 # So this library is called ts_rt_request-tracker_functions.sh
-# All functions will start with the prefix followed by a dot. e.g. rt.fuction_name
+# All functions will start with the prefix followed by a dot.i
+#  e.g. rt.fuction_name
+
 # all libraries will:
 #       include a prefix.describe function 
 #       have a #!/bin/bash line at the top
-#       call this function at the end of the script 
-#       so you can call the script directly to get a description of what it does
+#       call this function at the end of the script, 
+#       testing for -h or --help
+#       so you can call the script directly 
+#       to get a description of what it does
 #       ditto for prefix.list_functions
 
 # example
 
 #wget --keep-session-cookies  --save-cookies cookies.txt  --post-data 'user=$RTUSER&pass=$RTPASS`' -qO-  todo.freegeek.org/REST/1.0/search/ticket?query=Queue=%27TechSupport%27ANDid=$TICKET
-~                   
+                   
 # N.B. %27 = ' and is needed 
 
 # need to add format.
@@ -55,13 +59,22 @@ fi
 global.list_functions(){
 for function in $(grep '()' $0| grep -v 'global' | grep -v 'grep'); do
     function_name=$(echo $function | awk -F '(' '{print $1}')
-    $function_name help
+    echo $function_name
+    $function_name 'help'
 done
 }
 
 
 # Describe what this library does
-rt.describe(){ cat <<EOF
+rt.describe(){ 
+#description
+if global.check_desc $1; then cat <<EOF
+$FUNCNAME [string]
+Prints description of library
+EOF
+    return 
+fi
+cat <<EOF
 
 This file is intended as a bash library. 
 Calling it directly merely  prints this description.
@@ -75,6 +88,12 @@ EOF
 
 #List functions library contains
 rt.list_functions(){ 
+if global.check_desc $1; then cat <<EOF
+$FUNCNAME 
+Prints listing of all library specific functions in library.
+EOF
+    return
+fi
 global.list_functions
 }
 
@@ -109,7 +128,7 @@ EOF
 
 #function...
 local status_line="$1"
-if [[ $status_line =~ "200 OK" ]]; then
+if [[ $status_line =~ "200 Ok" ]]; then
         return 0
 else 
         return 1
@@ -124,7 +143,7 @@ $FUNCNAME [ticket-no] [queue]
 Tests to see if a ticket exists. Takes a ticket number and optionally
 a queue name. Assumes tech support queue otherwise (set default queue in the script. Edit rt_global_queue variable to change). 
 Returns 0 on success (i.e. ticket exists in queue)
-        1 if ticket does not exisat in queue
+        1 if ticket does not exist in queue
         3 other error e.g. RT  returned  bad request
 EOF
     return
@@ -144,7 +163,7 @@ declare -a local rt_message
 while read line; do
         # push line onto rt_message array
         rt_message=(${rt_message[@]}  "$line")
-done < <rt.search_ticket "Queue=%27${queue}%27ANDid=${id}"
+done < <(rt.search_ticket "Queue=%27${queue}%27ANDid=${id}")
 
 # check message status
 local status=${rt_message[0]}
@@ -170,7 +189,8 @@ fi
 
 
 # END OF FILE, FUNCTIONS GO ABOVE THIS LINE
-
 # Describe what this library does, and what it contains
-rt.describe
-rt.list_functions
+if [[ $1 == "-h" || $1 == "--help" ]]; then
+        rt.describe
+        rt.list_functions
+fi
