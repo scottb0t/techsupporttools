@@ -1,0 +1,112 @@
+#!/bin/bash
+# this file has the following standard layout
+# CONFIGURATION
+# help function
+# INCLUDES
+#FUNCTIONS
+# process option arguments
+# MAIN
+
+# CONFIGURATION
+path_to_src="/home/paulm/tstools/tstools_package/"
+path_to_out="/home/paulm/"
+version_file="${path_to_src}.version"
+
+
+help(){
+cat <<EOF 
+
+usage: $0 [OPTION]...
+Builds a tarball of the tstools package and updates the webpage. 
+-h              Prints this message
+-l [FILE]       Use logfile FILE
+-n [VERSION]    New version number. Otherwise auto increments.
+-m [MESSAGE]    A description of the changes for this version. 
+-t              Ony build tarball.
+-d              Only update documentation.
+-D              Dry run. Run any tests but do not update anything.
+
+This script builds a tarball of a new version of the TStools package 
+and updates the documentation. It will first run any tests and will complete 
+only if they are sucessful. 
+
+If you do not supply a version number it will auto-increment the last part
+of the old version (e.g. 0.1.9 to 0.1.10).
+
+You will be prompted for a description of the changes if you do not supply one.
+
+EOF
+
+# if $1 exists and is a number 0..255 return that otherwise return 0
+if [[ -n $1 && $(echo {0..255}) =~ $1 ]]; then
+        exit $1
+else
+    exit 0
+fi
+}
+# INCLUDES
+./ts_functions.sh 
+
+#FUNCTIONS
+
+# process option arguments
+while getopts "hl:n:m:tdD" option; do        # w: place variable following w in $OPTARG
+    case "$option" in
+        h) help;;
+        l) logfile="$OPTARG";;
+        n) new_version="$OPTARG";;
+        m) message=="$OPTARG";;
+        t) tar_only="true";;
+        d) doc_only="true";;
+        D) dryrun_only="true";;
+        [?])  echo "bad option supplied" ;
+            help;;
+    esac
+done
+
+#MAIN
+
+# Get old version number if not set
+if [[ -e $version_file ]]; then
+    old_version=$(cat $version_file)
+else
+    write_msg "Could not read $version_file!"
+    write_msg "Please create this_file"
+    exit 3
+fi
+
+# check we can write to the version file
+# increment version if necessary then write to file
+
+if ! check_file_write $version_file; then
+    write_msg "Could not write to $version_file!..exiting"
+fi
+if [[ ! $new_version ]]; then
+    new_version=$(cp.increment_version $old_version)
+fi
+write_msg "New version: $new_version"
+echo "$new_version" > $version_file
+
+# (As function) tar -cvzf  $outpath/tstools/.${new_version}.tar.gz ${source_to_path}README ${source_to_path}ts* 
+
+# edit ~/code/html/tsbackup/index.html (as var) 
+# change line:
+#The current version is <a href="/tstools.${old_version}.tar.gz">tstools.${old_version}.tar.gz</a>.<br /> 
+#to 
+#<a href="/tstools.${new_version}.tar.gz">tstools.${new_version}.tar.gz</a>.<br /> 
+
+# split file on:
+#             <strong>History</strong><br />
+#            <dl class="flat">
+# add:
+#<dt class="flat"><a href="/tstools.${new_version}.tar.gz">tstools.${new_version}.tar.gz</a></dt>
+#                <dd class="flat">$message.</dd>
+#
+
+# cd ~/code/html/tsbackup/
+# git commit -m "update for $new_version" index.html
+# git push tsbackup
+
+# if $USER/bin/rssh then rssh else ssh
+
+# rssh tsbackup ln -s /var/www/tstools.${new_version}.tar.gz /var/www/tstools.tar.gz
