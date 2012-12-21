@@ -85,7 +85,24 @@ if [[ ! $new_version ]]; then
     new_version=$(cp.increment_version $old_version)
 fi
 write_msg "New version: $new_version"
-echo "$new_version" > $version_file
+if [[ $dryrun_only ]]; then 
+    echo "$new_version" > $version_file
+else
+    echo "would update $version file to $new_version"
+fi
+
+# for blaargh in unit-tests integration-tests; do
+#   blaargh/call-tests
+#   result=$?
+#   if [[ $result -eq 0 ]]; then
+#        write_msg "passed $blaargh"
+#   else
+#       write_msg "failed $blaargh" 
+#       exit 3
+#   fi
+# write_msg "passed all tests, proceeding to build package"
+# if [[ $dryrun_only ]]; then echo "(not really)"; fi
+#
 
 # (As function) tar -cvzf  $outpath/tstools/.${new_version}.tar.gz ${source_to_path}README ${source_to_path}ts* 
 
