@@ -59,9 +59,8 @@ if [[ $? ==  0 && $user  == $USER]]; then
 if
 
 # reset panel second stage maybe unnecessary need to test
-
-# set appropriate command and options
+rm -r /home/$user/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 
+rm -r /home/$user/.config/xfce4/panel/
  
-
 # see ticket #32682
 
