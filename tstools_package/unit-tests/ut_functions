@@ -31,7 +31,11 @@ ut.test_false(){
     $function_name "$input" >>/dev/null
     local result=$?
     echo -n "Test if false ${function_name}: " 
-    if [[ $result -ne 0 ]]; then
+    
+    if [[ $result -eq 127 ]]; then
+    #if 127 then function does not exist so fail
+        ut.fail 
+    elif [[ $result -ne 0 ]]; then
         ut.pass
     else
         ut.fail
