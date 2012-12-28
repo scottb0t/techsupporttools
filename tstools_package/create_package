@@ -25,6 +25,13 @@ Builds a tarball of the tstools package and updates the webpage.
 -t              Ony build tarball.
 -d              Only update documentation.
 -D              Dry run. Run any tests but do not update anything.
+-r [EMAIL]      Specify optional adress to send email to. 
+                It is not necessary to specify an address. 
+                There is one set by default in the script.
+
+-f [EMAIL]      Set the from email adress. It is not necessary to 
+                specify an address. There is one set by default in
+                the script.
 
 This script builds a tarball of a new version of the TStools package 
 and updates the documentation. It will first run any tests and will complete 
@@ -34,6 +41,9 @@ If you do not supply a version number it will auto-increment the last part
 of the old version (e.g. 0.1.9 to 0.1.10).
 
 You will be prompted for a description of the changes if you do not supply one.
+
+
+Unless the -D -d or -t options are set it will automatically create a new ticket  with details of the new release and send an email out to support-staff (and any email set with the -r option.
 
 EOF
 
@@ -49,13 +59,17 @@ fi
 
 #FUNCTIONS
 
+
+
 # process option arguments
-while getopts "hl:n:m:tdD" option; do        # w: place variable following w in $OPTARG
+while getopts "hl:n:m:r:f:tdD" option; do        # w: place variable following w in $OPTARG
     case "$option" in
         h) help;;
         l) logfile="$OPTARG";;
         n) new_version="$OPTARG";;
         m) message=="$OPTARG";;
+        r) recipient=$OPTARG;;
+        f) sender=$OPTARG;;
         t) tar_only="true";;
         d) doc_only="true";;
         D) dryrun_only="true";;
@@ -64,6 +78,11 @@ while getopts "hl:n:m:tdD" option; do        # w: place variable following w in 
     esac
 done
 
+if [[ $recipient && ! $mail ]]; then
+        echo "The -r option requires the use of -m"
+elif [[ $sender && ! $mail ]]; then
+        echo "The -f option requires the use of -m"
+fi 
 #MAIN
 
 # Get old version number if not set

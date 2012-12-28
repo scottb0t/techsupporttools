@@ -1,5 +1,5 @@
 #!/bin/bash
-source  /path/to/functions/being/tested
+source ../ts_rt_request-tracker_functions.sh 
 source ./ut_functions
 fail_count=0
 #### usage #####

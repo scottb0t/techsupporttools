@@ -1,5 +1,81 @@
 #!/bin/bash
 
+#####################################
+# Functions common to all libraries #
+#####################################
+
+# tolower !
+global.tolower(){
+echo $1 | tr [:upper:] [:lower:]
+}
+
+# return 0 (==true) if fed help
+global.check_desc(){
+local var=$(global.tolower $1)
+if [[ $var == 'help' ]]; then
+    return 0
+else
+    return 1
+fi
+}
+
+#List functions library contains
+global.list_functions(){
+for function in $(grep '()' $0| grep -v 'global' | grep -v 'grep'); do
+    function_name=$(echo $function | awk -F '(' '{print $1}')
+    $function_name help
+done
+}
+
+# Don't forget to replace template with actual prefix
+
+#Describe what this library does
+template.describe(){ 
+#description
+if global.check_desc $1; then cat <<EOF
+$FUNCNAME 
+Prints Description of library.
+EOF
+    return
+fi
+#function...
+cat <<EOF
+
+This file is intended as a bash library. 
+Calling it directly merely  prints this description.
+
+EOF
+}
+
+#List functions library contains
+template.list_functions(){ 
+#description
+if global.check_desc $1; then cat <<EOF
+$FUNCNAME 
+Prints list of library specific functions.
+EOF
+    return
+fi
+#function...
+    global.list_functions
+EOF
+}
+
+template.example_function(){
+#description
+if global.check_desc $1; then cat <<EOF
+$FUNCNAME 
+Insert description here
+EOF
+    return
+fi
+#function...
+}
+
+
+
+#### End of global functions and templates ####
+
 # user functions
 
 test_for_root(){
@@ -254,5 +330,13 @@ check_valid_chars(){
 	else
 		return 0
 	fi
+}
+
+
+# sends an email
+ts.send_email(){
+    local from=$1
+    local recipient=$2
+    
 }
 
