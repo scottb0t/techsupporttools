@@ -1,5 +1,5 @@
 #!/bin/bash
-source ../ts_rt_request-tracker_functions.sh 
+source /home/paulm/tstools/tstools_package/ts_functions.sh
 source ./ut_functions
 fail_count=0
 #### usage #####
@@ -17,6 +17,7 @@ fail_count=0
 
 #
 
+
 sender="paulm@freegeek.org"
 recipient="bugs@todo.freegeek.org"
 test_email="test@freegeek.org"
@@ -29,32 +30,32 @@ echo -n "2. test for missing input:"
 ut.test_false ts.send_email $test_email not_enough_input
 
 echo -n "3. Test for missing message/subject:"
-ut.test_false ts.send_email $test_email $test_email "$msg"
-
+ts.send_email $test_email $test_email "$msg"
+ut.is_false $?
 echo -n "4. test for invalid sender:"
-ut.test_false ts.send_email not_a_valid email $test_email "$msg" $msg
-
+ts.send_email not_a_valid email $test_email "$msg" $msg
+$ut.is_false ?
 echo -n "5. test for invalid recipient:"
-ut.test_false ts.send_email $test_email not_a_valid_email "$msg" $msg
-
+test_false ts.send_email $test_email not_a_valid_email "$msg" $msg
+ut.is_false $?
 echo -n "6. Check return value for correct input (quoted message):"
-ut.test_true ts.send_email $test_email $test_email "$msg" "$msg"
-
+ts.send_email $test_email $test_email "$msg" "$msg"
+ut.is_true $?
 echo -n "7. Check return value for correct input (unquoted message):"
-ut.test_true ts.send_email $test_email $test_email "$msg" This is a valid message. 
-
+ts.send_email $test_email $test_email "$msg" This is a valid message. 
+ut.is_true $?
 # a period in bash is a synonym for source. We should check it isn't being expanded/input is sanitised
 echo -n "8. Check return value for correct input (quoted period as message):"
-ut.test_true ts.send_email $test_email $test_email "$msg" "This is a valid message . "
-
+ts.send_email $test_email $test_email "$msg" "This is a valid message . "
+ut.is_true $?
 echo -n "8. Check return value for correct input (unquoted period as message):"
-ut.test_true ts.send_email $test_email $test_email "$msg" This is a valid message .
-
+ts.send_email $test_email $test_email "$msg" This is a valid message .
+ut.is_true $?
 echo -n "10. Check return value for correct input (unquoted period on its own):"
-ut.test_true ts.send_email $test_email $test_emaili "$msg" .
-
+ts.send_email $test_email $test_email "$msg" .
+ut.is_true $?
 echo -n "11. Check message delivery (quoted):"
-ts.send_email $sender $recipient $msg
+ts.send_email $sender $recipient "$msg" "$msg"
 if [[ $? -ne 0 ]]; then
     ut.fail
 else
@@ -70,7 +71,7 @@ else
 fi
 
 echo -n "12. Check message delivery (unquoted):"
-ts.send_email $sender $recipient This is a valid message
+ts.send_email $sender $recipient "$msg" This is a valid message
 if [[ $? -ne 0 ]]; then
     ut.fail
 else
