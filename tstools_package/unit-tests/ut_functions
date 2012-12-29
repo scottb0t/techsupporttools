@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Functions common to all libraries
+global.tolower(){
+echo $1 | tr [:upper:] [:lower:]
+}
+
 ut.fail(){
     echo "fail"
     fail_count=$(( $fail_count + 1 ))
@@ -63,3 +68,16 @@ ut.test_output(){
     fi
 }
 
+ut.check_answer(){
+    while [ 1 ] ; do
+        read -n 1 answer
+        answer=$(global.tolower $answer)
+        if [[ $answer == y ]]; then
+            return 0
+        elif [[ $answer == n ]]; then
+            return 1
+        else
+            echo "please anser y or n"
+        fi
+    done
+}
