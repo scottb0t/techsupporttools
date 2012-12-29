@@ -28,30 +28,30 @@ ut.test_false ts.send_email
 echo -n "2. test for missing input:"
 ut.test_false ts.send_email $test_email not_enough_input
 
-echo -n "3. Test for missing message:"
-ut.test_false ts.send_email $test_email $test_email
+echo -n "3. Test for missing message/subject:"
+ut.test_false ts.send_email $test_email $test_email "$msg"
 
 echo -n "4. test for invalid sender:"
-ut.test_false ts.send_email not_a_valid email $test_email $msg $msg
+ut.test_false ts.send_email not_a_valid email $test_email "$msg" $msg
 
 echo -n "5. test for invalid recipient:"
-ut.test_false ts.send_email email $test_email not_a_valid $msg $msg
+ut.test_false ts.send_email $test_email not_a_valid_email "$msg" $msg
 
 echo -n "6. Check return value for correct input (quoted message):"
-ut.test_true ts.send_email $test_email $test_email $msg $msg
+ut.test_true ts.send_email $test_email $test_email "$msg" "$msg"
 
 echo -n "7. Check return value for correct input (unquoted message):"
-ut.test_true ts.send_email $test_email $test_email $msg This is a valid message. 
+ut.test_true ts.send_email $test_email $test_email "$msg" This is a valid message. 
 
 # a period in bash is a synonym for source. We should check it isn't being expanded/input is sanitised
 echo -n "8. Check return value for correct input (quoted period as message):"
-ut.test_true ts.send_email $test_email $test_email "This is a valid message . "
+ut.test_true ts.send_email $test_email $test_email "$msg" "This is a valid message . "
 
 echo -n "8. Check return value for correct input (unquoted period as message):"
-ut.test_true ts.send_email $test_email $test_email This is a valid message .
+ut.test_true ts.send_email $test_email $test_email "$msg" This is a valid message .
 
 echo -n "10. Check return value for correct input (unquoted period on its own):"
-ut.test_true ts.send_email $test_email $test_email .
+ut.test_true ts.send_email $test_email $test_emaili "$msg" .
 
 echo -n "11. Check message delivery (quoted):"
 ts.send_email $sender $recipient $msg
