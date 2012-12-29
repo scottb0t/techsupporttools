@@ -103,6 +103,24 @@ else
     echo "test_output output: pass"
 fi
 
+echo "please enter a y"
+ut.check_answer
+if [[ $? -eq 0 ]]; then
+    echo "test check_answer y: pass"
+else
+    echo "test check_answer y: fail"
+    let fail_count++
+fi
+
+echo "please enter a n"
+ut.check_answer
+if [[ $? -eq 1 ]]; then
+    echo "test check_answer n: pass"
+else
+   echo "test check_answer n: fail"
+   let fail_count++
+fi 
+
 if (( $fail_count > 254 )); then
     fail_count=255
     echo "Number of failed tests: 255 or greater"
