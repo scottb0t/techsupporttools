@@ -33,10 +33,10 @@ echo -n "3. Test for missing message/subject:"
 ts.send_email $test_email $test_email "$msg"
 ut.is_false $?
 echo -n "4. test for invalid sender:"
-ts.send_email not_a_valid email $test_email "$msg" $msg
-$ut.is_false ?
+ts.send_email not_a_valid_email $test_email "$msg" $msg
+ut.is_false $?
 echo -n "5. test for invalid recipient:"
-test_false ts.send_email $test_email not_a_valid_email "$msg" $msg
+ts.send_email $test_email not_a_valid_email "$msg" $msg
 ut.is_false $?
 echo -n "6. Check return value for correct input (quoted message):"
 ts.send_email $test_email $test_email "$msg" "$msg"
@@ -55,11 +55,11 @@ echo -n "10. Check return value for correct input (unquoted period on its own):"
 ts.send_email $test_email $test_email "$msg" .
 ut.is_true $?
 echo -n "11. Check message delivery (quoted):"
-ts.send_email $sender $recipient "$msg" "$msg"
+ts.send_email $sender $recipient "$msg"  "$msg unit test 11"
 if [[ $? -ne 0 ]]; then
     ut.fail
 else
-    echo "Was the message received by bugs in the bugs queue with the suject $msg and a content of $msg [y/n]"
+    echo "Was the message received by bugs in the bugs queue with the suject $msg and a content of $msg  unit test 11 [y/n]"
     ut.check_answer
     if [[ $? -eq 0 ]]; then
         echo "Don't forget to resolve the ticket"
@@ -71,11 +71,11 @@ else
 fi
 
 echo -n "12. Check message delivery (unquoted):"
-ts.send_email $sender $recipient "$msg" This is a valid message
+ts.send_email $sender $recipient "$msg" $msg unit test 12
 if [[ $? -ne 0 ]]; then
     ut.fail
 else
-    echo "Was the message received by bugs in the bugs queue with the suject $msg and a content of This is a valid message [y/n]"
+    echo "Was the message received by bugs in the bugs queue with the suject $msg and a content of $msg unit test 12[y/n]"
     ut.check_answer
     if [[ $? -eq 0 ]]; then
         echo "Don't forget to resolve the ticket"
