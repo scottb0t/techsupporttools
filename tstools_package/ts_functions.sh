@@ -335,8 +335,46 @@ check_valid_chars(){
 
 # sends an email
 ts.send_email(){
-    local from=$1
-    local recipient=$2
+#description
+if global.check_desc $1; then cat <<EOF
+$FUNCNAME 
+
+This functions sends an email. It takes the following options. 
+SENDER RECIPIENT 'SUBJECT' 'MESSAGE'
+All are required. It is prefereable to quote the message but not compulsory.
+The subject must be quoted, otherwise it will be truncated at the first word
+and the rest prepended to the message body.
+EOF
+    return
+fi
+#function...
+    # there must be at least 4 arguments supplied
+    if (( $# < 4 )); then
+        return 4
+    fi
+    # get parameters
+    local from="$1"
+    shift
+    local recipient="$1"
+    shift
+    local subject="$1"
+    shift
+    local message="$@"
+
+    # check for valid email 
+    # regex from http://www.regular-expressions.info/email.html
+    # NOT WORKING
+
+    if ! [[  $from =~ [A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4} ]]; then
+        echo "doh! $from"
+        return 67   # EX_NOUSER       67      /* addressee unknown */
+    elif ! [[ $recipient =~ ^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$ ]]; then
+         echo "doh!!"
+        return 67   # see /usr/include/sysexits.h
+    fi
     
+    # send mail with mailx and return return value
+    mailx -n -r "$from" -s "$subject"  "$recipient" < <(echo "$message")
+    return $?
 }
 
