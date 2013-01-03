@@ -353,9 +353,9 @@ fi
         return 4
     fi
     # get parameters
-    local from="$1"
+    local from=$(global.tolower "$1")
     shift
-    local recipient="$1"
+    local recipient=$(global.tolower "$1")
     shift
     local subject="$1"
     shift
@@ -363,13 +363,9 @@ fi
 
     # check for valid email 
     # regex from http://www.regular-expressions.info/email.html
-    # NOT WORKING
-
-    if ! [[  $from =~ [A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4} ]]; then
-        echo "doh! $from"
+    if ! [[  $from =~ [a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4} ]]; then
         return 67   # EX_NOUSER       67      /* addressee unknown */
-    elif ! [[ $recipient =~ ^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$ ]]; then
-         echo "doh!!"
+    elif ! [[ $recipient =~ ^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$ ]]; then
         return 67   # see /usr/include/sysexits.h
     fi
     
