@@ -59,6 +59,7 @@ fi
 
 #FUNCTIONS
 
+# (As function) tar -cvzf  $outpath/tstools/.${new_version}.tar.gz ${source_to_path}README ${source_to_path}ts* 
 
 
 # process option arguments
@@ -95,7 +96,6 @@ else
 fi
 
 # check we can write to the version file
-# increment version if necessary then write to file
 
 if ! check_file_write $version_file; then
     write_msg "Could not write to $version_file!..exiting"
@@ -104,26 +104,26 @@ if [[ ! $new_version ]]; then
     new_version=$(cp.increment_version $old_version)
 fi
 write_msg "New version: $new_version"
-if [[ $dryrun_only ]]; then 
-    echo "$new_version" > $version_file
-else
-    echo "would update $version file to $new_version"
-fi
 
-# for blaargh in unit-tests integration-tests; do
-#   blaargh/call-tests
-#   result=$?
-#   if [[ $result -eq 0 ]]; then
-#        write_msg "passed $blaargh"
-#   else
-#       write_msg "failed $blaargh" 
-#       exit 3
-#   fi
-# write_msg "passed all tests, proceeding to build package"
-# if [[ $dryrun_only ]]; then echo "(not really)"; fi
-#
 
-# (As function) tar -cvzf  $outpath/tstools/.${new_version}.tar.gz ${source_to_path}README ${source_to_path}ts* 
+# run tests
+
+
+for folder in unit-tests integration-tests; do
+   folder/call-tests
+   result=$?
+   if [[ $result -eq 0 ]]; then
+        write_msg "passed $folder"
+   else
+       write_msg "failed $folder" 
+       exit 3
+   fi
+done
+
+write_msg "passed all tests, proceeding to build package"
+if [[ $dryrun_only ]]; then write_msg "(not really)"; fi
+
+
 
 # edit ~/code/html/tsbackup/index.html (as var) 
 # change line:
@@ -146,3 +146,13 @@ fi
 # if $USER/bin/rssh then rssh else ssh
 
 # rssh tsbackup ln -s /var/www/tstools.${new_version}.tar.gz /var/www/tstools.tar.gz
+
+# increment version if necessary then write to file
+if [[ $dryrun_only ]]; then 
+    echo "would update $version file to $new_version"
+else
+    echo "incrementing version"
+    echo "$new_version" > $version_file
+fi
+
+
