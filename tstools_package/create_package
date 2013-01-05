@@ -9,9 +9,9 @@
 
 # CONFIGURATION
 path_to_src="/home/paulm/tstools/tstools_package/"
-path_to_out="/home/paulm/"
+path_to_output="/home/paulm/"
 version_file="${path_to_src}.version"
-
+remote_host="tsbackup"
 
 help(){
 cat <<EOF 
@@ -59,7 +59,6 @@ fi
 
 #FUNCTIONS
 
-# (As function) tar -cvzf  $outpath/tstools/.${new_version}.tar.gz ${source_to_path}README ${source_to_path}ts* 
 
 
 # process option arguments
@@ -108,7 +107,6 @@ write_msg "New version: $new_version"
 
 # run tests
 
-
 for folder in unit-tests integration-tests; do
    folder/call-tests
    result=$?
@@ -123,8 +121,53 @@ done
 write_msg "passed all tests, proceeding to build package"
 if [[ $dryrun_only ]]; then write_msg "(not really)"; fi
 
+# create tar file 
 
+tar_file=${path_to_output}tstools.${new_version}.tar.gz 
+if [[ ! $doc_only ]]; then
+    check_file_write $tar_file
+    if [[ $? -ne 0 ]]; then
+        write_msg "could not write to $tar_file"
+        exit 73
+    fi
 
+    if [[ $dryrun_only ]]; then 
+        write_msg "would create $tar_file"
+        rm $tar_file
+    elif ! tar -cvzf $tar_file  ${path_to_src}README ${path_to_src}ts* 
+        write_msg "error creating $tar_file"
+        rm $tar_file
+        exit 73
+    else
+        write_msg "created $tar_file"
+    fi
+
+# copy file: scp $tarfile $remote_host:/var/www/
+# if $USER/bin/rssh then rssh else ssh
+# rssh tsbackup ln -s /var/www/tstools.${new_version}.tar.gz /var/www/tstools.tar.gz
+
+    # copy file to remote host
+    if [[ $dryrun_only ]]; then
+        write_msg "would copy $tar_file to $remote_host"
+    elif ! scp $tarfile $remote_host:/var/www/; then
+        write_msg "Could not copy $tar_file to $remote_host"
+        exit 69
+    fi
+
+    # worker around for the fact that I have a wrapper script for ssh 
+    if [[ -e $USER/bin/rssh ]]; then
+        ssh_command="rssh"
+    else
+        ssh_command="ssh"
+    fi
+    # create symlink from current version to tstools.tar.gz
+    if [[ $dryrun_only ]]; then
+        write_msg "would create sysmlink to tstools.tar.gz on $remote_host"
+    elif ! $ssh_command $remote_host ln -s /var/www/tstools.${new_version}.tar.gz /var/www/tstools.tar.gz; then
+        write_msg "create sysmlink to tstools.tar.gz on $remote_host"
+        exit 69
+    fi
+fi
 # edit ~/code/html/tsbackup/index.html (as var) 
 # change line:
 #The current version is <a href="/tstools.${old_version}.tar.gz">tstools.${old_version}.tar.gz</a>.<br /> 
@@ -142,10 +185,6 @@ if [[ $dryrun_only ]]; then write_msg "(not really)"; fi
 # cd ~/code/html/tsbackup/
 # git commit -m "update for $new_version" index.html
 # git push tsbackup
-
-# if $USER/bin/rssh then rssh else ssh
-
-# rssh tsbackup ln -s /var/www/tstools.${new_version}.tar.gz /var/www/tstools.tar.gz
 
 # increment version if necessary then write to file
 if [[ $dryrun_only ]]; then 
