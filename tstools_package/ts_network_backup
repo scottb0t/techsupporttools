@@ -184,7 +184,12 @@ else
 		path="/home/"
 		# ext_path is only need if we are working relative to something other than /
 		# i.e. is null
-	fi
+    else 
+        path=$(remove_spaces $path)
+        if [[ $ext_path ]]; then
+            ext_path=$(remove_spaces $ext_path)
+        fi
+    fi
 fi
 
 #sanity checks
