@@ -406,3 +406,8 @@ restore_backup(){
 	return $?
 	
 }
+
+
+remove_spaces(){
+echo $@ | sed 's$\ $\/\/\/ $g'
+}
