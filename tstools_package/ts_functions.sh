@@ -383,7 +383,7 @@ if global.check_desc $1; then cat <<EOF
 $FUNCNAME 
 returns distro version.
 -d  return full name e.g. Ubuntu 12.04.2 LTS
-otherwise defaults to returning version numver e.g. 12.04 
+otherwise defaults to returning version number e.g. 12.04 
 EOF
 
 return
