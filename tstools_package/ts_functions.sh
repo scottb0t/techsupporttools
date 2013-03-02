@@ -377,7 +377,7 @@ fi
     return $?
 }
 
-ts.indentify_distro(){
+ts.identify_distro(){
 #description
 if global.check_desc $1; then cat <<EOF
 $FUNCNAME 
