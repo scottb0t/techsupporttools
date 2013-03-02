@@ -377,3 +377,54 @@ fi
     return $?
 }
 
+ts.indentify_distro_version(){
+#description
+if global.check_desc $1; then cat <<EOF
+$FUNCNAME 
+returns distro version.
+-d  return full name e.g. Ubuntu 12.04.2 LTS
+otherwise defaults to returning version numver e.g. 12.04 
+EOF
+
+return
+fi
+    #function...
+    if [[ $1 == '-d' ]]; then
+        local release="$(lsb_release -ds)
+    else
+        local release="$(lsb release -rs)
+    fi
+    echo $release
+}
+
+ts.is_12.04(){
+#description
+if global.check_desc $1; then cat <<EOF
+$FUNCNAME 
+returns 0 if 12.04 otherwise 1
+EOF
+    return
+fi
+if [[ $(lsb release -rs) == '12.04' ]]; then
+    return 0
+else
+    return 1
+fi
+}
+
+ts.is_10.04(){
+#description
+if global.check_desc $1; then cat <<EOF
+$FUNCNAME 
+returns 0 if 12.04 otherwise 1
+EOF
+    return
+fi
+if [[ $(lsb release -rs) == '10.04' ]]; then
+    return 0
+else
+    return 1
+fi
+}
+
+  
