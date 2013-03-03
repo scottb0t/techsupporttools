@@ -225,7 +225,7 @@ local message=$@
 
 # Action can be "comment" or "correspond". For a list of fields you can use in correspondence, try "/opt/rt3/bin/rt correspond ticket/1" 
 
-# wget --keep-session-cookies  --save-cookies cookies.txt  --post-data "user=tsrobot&pass=EucNabs4&content=id:34168\nAction: comment\nText: test\nAttachment: " -qO- http://todo.freegeek.org/REST/1.0/ticket/34168/comment
+# wget --keep-session-cookies  --save-cookies cookies.txt  --post-data "user=tsrobot&pass=EucNabs4&content=id: 34168\nAction: comment\nText: test\nAttachment: " -qO- http://todo.freegeek.org/REST/1.0/ticket/34168/comment
 # ^^^ doesn't work but getting close
 
 
