@@ -106,3 +106,26 @@ ut.check_answer(){
         fi
     done
 }
+
+ut.assert_equals(){
+    local input=$1
+    local expected=$2
+    if [[ "$1" == "$2" ]] ; then
+        ut.pass
+        return 0
+    else
+        ut.fail
+        return 0 
+    fi
+}
+ut.assert_matches(){
+    local input=$1
+    local expected=$2
+    if [[ "$1" =~ "$2" ]] ; then
+        ut.pass
+        return 0
+    else
+        ut.fail
+        return 0 
+    fi
+}
