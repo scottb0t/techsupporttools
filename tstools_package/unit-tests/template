@@ -14,8 +14,12 @@ fail_count=0
 #                                   1 if input and output do not match
 #                                   0 if input and output do match
 #                                   it does regex match on [expected-output]
-
-
+#ut.assert_equals [got] [expected]  calls ut.pass if got == expected otherwise 
+#                                   ut.fails. Use like this
+#                                   out=$(function) 
+#                                   ut.assert_equals $out 'expected'
+#                                   returns 0 on match, 1 otherwise.
+#ut.assert_matches [got] [expected] as above but does regex match
 
 
 
