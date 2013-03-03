@@ -390,9 +390,9 @@ return
 fi
     #function...
     if [[ $1 == '-d' ]]; then
-        local release="$(lsb_release -ds)
+        local release="$(lsb_release -ds)"
     else
-        local release="$(lsb release -rs)
+        local release="$(lsb_release -rs)"
     fi
     echo $release
 }
@@ -405,7 +405,7 @@ returns 0 if 12.04 otherwise 1
 EOF
     return
 fi
-if [[ $(lsb release -rs) == '12.04' ]]; then
+if [[ $(lsb_release -rs) == '12.04' ]]; then
     return 0
 else
     return 1
@@ -420,7 +420,7 @@ returns 0 if 12.04 otherwise 1
 EOF
     return
 fi
-if [[ $(lsb release -rs) == '10.04' ]]; then
+if [[ $(lsb_release -rs) == '10.04' ]]; then
     return 0
 else
     return 1
