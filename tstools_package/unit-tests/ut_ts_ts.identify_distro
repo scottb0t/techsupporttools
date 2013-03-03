@@ -1,5 +1,5 @@
 #!/bin/bash
-source  /path/to/functions/being/tested
+source /home/paulm/tstools/tstools_package/ts_functions.sh 
 source ./ut_functions
 fail_count=0
 #### usage #####
@@ -24,13 +24,13 @@ fail_count=0
 
 
 out="$(ts.identify_distro)"
-ut.assert_equals "12.04"
+ut.assert_equals  "$out" "12.04"
 
 out="$(ts.identify_distro -d )"
-ut.assert_matches "Ubuntu 12.04"
+ut.assert_matches "$out" "Ubuntu 12.04"
 
-ut.test_false ut.is_10.04
-ut.test_true ut.is_12.04
+ut.test_false ts.is_10.04
+ut.test_true ts.is_12.04
 
 if (( $fail_count > 254 )); then
     fail_count=255
