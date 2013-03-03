@@ -13,11 +13,11 @@ for file in *; do
         let test_count++
     fi
 done
-echo "Ran $test_count tests with $ total_count failures"
+echo "Ran $test_count tests with $total_count failures"
 if [[ $total_count -eq 0 ]]; then
     echo "All tests passed"
     exit 0
 else
-    echo "Some test failed"
+    echo "Some tests failed"
     exit 2
 fi
