@@ -22,6 +22,18 @@
 #       to get a description of what it does
 #       ditto for prefix.list_functions
 
+
+template.example_function(){
+#description
+if global.check_desc $1; then cat <<EOF
+$FUNCNAME 
+Insert description here
+EOF
+    return
+fi
+#function...
+}
+
 # example
 
 #wget --keep-session-cookies  --save-cookies cookies.txt  --post-data 'user=$RTUSER&pass=$RTPASS`' -qO-  todo.freegeek.org/REST/1.0/search/ticket?query=Queue=%27TechSupport%27ANDid=$TICKET
@@ -185,7 +197,41 @@ else
 fi
 }
 
+rt.post_comment(){
+#description
+if global.check_desc $1; then cat <<EOF
+$FUNCNAME 
+Usage:
+$FUNCNAME [ticket_no] ["message"]
 
+Adds a comment to a ticket
+EOF
+    return
+fi
+#function...
+
+local ticket=$1
+shift $@
+local message=$@
+
+# Ticket History Comment Edit
+
+# To add a comment to an existing ticket: POST on "/REST/1.0/ticket/<ticket-id>/comment" with a variable name "content", containing "key: value" line by line:
+
+# id: <ticket-id>
+# Action: comment
+# Text: the text comment
+# Attachment: an attachment filename/path
+
+# Action can be "comment" or "correspond". For a list of fields you can use in correspondence, try "/opt/rt3/bin/rt correspond ticket/1" 
+
+# wget --keep-session-cookies  --save-cookies cookies.txt  --post-data "user=tsrobot&pass=EucNabs4&content=id:34168\nAction: comment\nText: test\nAttachment: " -qO- http://todo.freegeek.org/REST/1.0/ticket/34168/comment
+# ^^^ doesn't work but getting close
+
+
+local url=${rt_url}ticket/${ticket}/comment"
+
+}
 
 
 # END OF FILE, FUNCTIONS GO ABOVE THIS LINE
