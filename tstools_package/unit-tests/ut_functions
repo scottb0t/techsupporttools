@@ -47,7 +47,6 @@ ut.test_false(){
     $function_name $@ >>/dev/null
     local result=$?
     echo -n "Test if false ${function_name}: " 
-    echo $result
     if [[ $result -eq 127 ]]; then
     #if 127 then function does not exist so fail
         ut.fail 
