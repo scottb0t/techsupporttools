@@ -46,7 +46,7 @@ fi
  
 local.reset_12.04(){
 pgrep xfce4 >> /dev/null
-if [[ $? ==  0 && $user  == $USER]]; then
+if [[ $? ==  0 && $user  == $USER ]]; then
     echo "You can not run this program if you are logged in as the user"
     echo "you are attempting to change while xfce4 (the graphic environment"
     echo " is running"
