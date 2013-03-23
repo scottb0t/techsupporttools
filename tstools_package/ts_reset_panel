@@ -94,15 +94,15 @@ elif ! test_for_user $user $path; then
     echo "$user not found! exiting..."
     exit 3
 fi
-version=$(ts.indentify_distro -d )
+version=$(ts.identify_distro -d )
 
 if [[ $version =~ "10.04" ]];then
     local.reset_10.04
-    retval = $?
+    retval=$?
     exit $retval
 elif [[ $version =~ "12.04" ]];then
     local.reset_12.04
-    retval = $?
+    retval=$?
     exit $retval
 else
     echo "$version is not supported by this program"
