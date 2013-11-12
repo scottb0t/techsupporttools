@@ -1,3 +1,15 @@
+fg-tstools (0.1.16) public; urgency=low
+
+  [ Paul Munday ]
+  * Updated dependencies.
+  * Support 12.04 and 10.04 for panel reset.
+  * Fix account information restoration (Closes: RT#38198)
+
+  [ Vagrant Cascadian ]
+  * Remove cruft in debian dir.
+
+ -- Vagrant Cascadian <vagrant@freegeek.org>  Tue, 12 Nov 2013 13:34:58 -0800
+
 fg-tstools (0.1.15) public; urgency=low
 
   [ Paul Munday ]
