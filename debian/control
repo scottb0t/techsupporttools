@@ -1,5 +1,5 @@
 Source: fg-tstools
-Section: public/misc
+Section: misc
 Priority: extra
 Maintainer: Paul Munday <paulm@freegeek.org>
 Uploaders: Vagrant Cascadian <vagrant@freegeek.org>
