@@ -1,11 +1,18 @@
 #!/bin/bash
-#functions for ts_network_backup
-#split out for convinience
+# functions for ts_network_backup
+# split out for convinience
+# set -x #debugging
+
+# check for a specified backup dir on a remote machine
+# this function returns 1 if it cannot find backup_dir
+# usage:
+# check_for_backup_dir <r_user> <r_host> <backup_path> <backup_dir>
 check_for_backup_dir(){
 	local backupuser=$1
 	local backuphost=$2
 	local backuppath=$3
 	local backupdir=$4
+
 	# success if finds backupdir
 	if ssh $backupuser@$backuphost ls $backuppath/$backupdir &> /dev/null; then
 		return 0
@@ -14,21 +21,26 @@ check_for_backup_dir(){
 	fi
 }
 
-
+# test function that checks that we are able to backup files before proceeding
+# this function returns 3 if any files passed to this function cannot be written to (check_file_write () in ts_functions.sh)
+# usage:
+# backup_users_test <file1> <file2> <file3> ...
 backup_users_test(){
+
 	# check we can write to the backup files
         declare -a failarray
         for file in $@; do
-                 if [[ $(check_file_write "${file}") -ne 0 ]]; then
+		if [[ $(check_file_write "${file}") -ne 0 ]]; then
                         # if we cant write to file add to array
                         failarray=( ${failarray[@]-} $(echo "$file") )
-	fi
+		fi
         done
-        # check length of failarray if >0 then something failed
+
+        # check length of failarray; if >0 then something failed
         if [[ ${#failarray[@]} -ne 0 ]]; then
                 echo -n "error writing to "
                 for name in ${failarray[@]}; do
-                        echo -n "$name"
+                        echo -n "$name "
                 done
                 return 3
         else
@@ -36,35 +48,46 @@ backup_users_test(){
 		return 0
 	fi
 }
-
+# get the groups that a user belongs to
+# NOTE: currently used in backup_users() function below
+# usage:
+# get_groups <user> <extpath>
 get_groups(){
         local user=$1
         local extpath=$2
         local group
         local groups
         local gcount=0
+
         for group in $(grep $user ${extpath}/etc/group | awk -F: '{print $1}'); do
                 if [[ $group != $user ]]; then
-                    if (( $gcount < 1 )); then
-                        groups=${group}
-                    else
-                        groups="${groups},${group}"
-                    fi
-                    let gcount++
+                	if (( $gcount < 1 )); then
+                        	groups=${group}
+                    	else
+                        	groups="${groups},${group}"
+                   	fi
+
+                    	let gcount++
                 fi
         done
+
         echo "$groups"
 }
 
+# backs up users on the system to a remote machine
+# usage:
+# backup_users <path> <extpath>
 backup_users(){
-    local path=$1
+
+	local path=$1
 	local extpath=$2
 	local user
 	local user_uid
 	local userlist
 	local fail
 	local fail_list
-    #
+
+	# read /etc/passwd line by line
         while read line ; do
                 user=$(echo $line | awk -F : '{print $1}')
                 user_uid=$(echo $line | awk -F : '{print $3}')
@@ -74,8 +97,7 @@ backup_users(){
                         # N.B. 12.04 has guest users need to account for these
                         if [[ ! $user == "nobody" ]]; then
                             # gets lists of groups user belongs to
-                            #echo "$user: $(id $user)" >>"${path}/group"
-                            echo "$user: $(get_groups $user)" >>"${path}/ts_group"
+                            echo "$user: $(get_groups $user $extpath)" >>"${path}/ts_group"
                             if (( $? != 0 )); then
                                 fail="${fail} ${path}/ts_group "
                             fi
@@ -91,6 +113,7 @@ backup_users(){
                             if (( $? != 0 )); then
                                 fail="${fail} ${path}/ts_shadow "
                             fi
+
                             if [[ $fail ]]; then
                                 for file in $fail; do
                                     fail_list="${failist}\n${user}:${file}"
@@ -102,6 +125,7 @@ backup_users(){
                         fi
                 fi
         done < $extpath/etc/passwd
+
 	if [[ $userlist ]]; then
 		echo "Backed up passwords for $userlist"
 	fi
@@ -112,10 +136,15 @@ backup_users(){
 		return 0
 	fi
 }
+
+# deletes a user from the local machine by altering fields in /etc/passwd, /etc/shadow, /etc/group
+# usage:
+# delete_user <user> <gid> <extpath>
 delete_user(){
         local user=$1
         local gid=$2
         local extpath=$3
+
 	#N.B. users may not be in file
 	# delete matching lines in /etc/passwd
         sed -i "/^$user:/ d" $extpath/etc/passwd
@@ -125,6 +154,9 @@ delete_user(){
 	sed -i "/:$gid:/ d" $extpath/etc/group
 }
 
+# restores a user
+# usage:
+# restore_user <path> <user> <uid> <gid> <password> <extpath>
 restore_user(){
         local path=$1
 	local user=$2
@@ -141,32 +173,28 @@ restore_user(){
 	# delete matching lines in /etc/passwd etc
 	delete_user $user $gid $extpath
 
-    if ! $chroot_path addgroup --gid $gid $user; then
+    	if ! $chroot_path addgroup --gid $gid $user; then
        		echo "problem creating ${user}'s group"
 		return 3
  	elif ! $chroot_path useradd -N --gid $gid --uid $uid -d /home/$user --password $password --shell /bin/bash $user; then
 		echo "problem creating user: $user"
 		return 3
 	else
-        if [[ -e $path/ts_group ]]; then
-            group="ts_group"
-        else
-            group="group"
-        fi
+        	if [[ -e $path/ts_group ]]; then
+            		group="ts_group"
+        	else
+            		group="group"
+        	fi
+       
+        	# read /home/group usermod to addusers to groups
+        	#local groups=$(grep -e "\<$user\>" $path/group | cut -f1 -d: -)
+        	# line above printed only 1st field , we wanted all but 1st
+        	local usergroups=$(grep -e "\<$user\>" $path/$group | cut -f2- -d: -)
         
-        
-        
-        
-        # read /home/group usermod to addusers to groups
-        #local groups=$(grep -e "\<$user\>" $path/group | cut -f1 -d: -)
-        # line above printed only 1st field , we wanted all but 1st
-        local usergroups=$(grep -e "\<$user\>" $path/$group | cut -f2- -d: -)
-        
-        # 12.04 switched sudo for admin in /etc/groups for root users
-        # admin still works but the group is not present by default
-        # so we swtich to sudo for forward (and backward) compatibility
-        usergroups=$(cat $usergroups | sed s/,admin/,sudo/) 
-
+        	# 12.04 switched sudo for admin in /etc/groups for root users
+        	# admin still works but the group is not present by default
+        	# so we swtich to sudo for forward (and backward) compatibility
+        	usergroups=$(echo $usergroups | sed s/,admin/,sudo/)
 
 #               superfluous: get_groups produces correctly formatted entry
 #                 	for entry in $groups; do
@@ -178,52 +206,60 @@ restore_user(){
 #                 	                fi
 # 	                        fi
 # 	                done
-        if [[ ${#usergroups} -ne 0 ]] ; then
-                if ! $chroot_path usermod -a -G "$usergroups" $user; then
-                        echo "problem adding ${user}'s groups"
-                        return 3
-                fi
-        fi
+        	if [[ ${#usergroups} -ne 0 ]] ; then
+                	if ! $chroot_path usermod -a -G "$usergroups" $user; then
+                        	echo "problem adding ${user}'s groups"
+                        	return 3
+                	fi
+        	fi
 		return 0
 	fi
 }
 
+# usage:
+# restore_users <path> <ext_path>
 restore_users(){
+
 	local path=$1
 	local extpath=$2
+
         # note that copying files back across is not sufficient
         # need to extract values from files and added to new copies
-    if [[ -e $path/ts_passwd ]]; then
-        filelist=(ts_passwd ts_group ts_shadow)
-    else
-        filelist=(passwd group shadow)
-    fi
-    passwd=${filelist[0]}
-    shadow=${filelist[2]}
+    	if [[ -e $path/ts_passwd ]]; then
+        	filelist=(ts_passwd ts_group ts_shadow)
+	else
+        	filelist=(passwd group shadow)
+    	fi
+
+    	passwd=${filelist[0]}
+    	shadow=${filelist[2]}
 
 	for file in ${filelist[@]}; do
 		check_file_read "$path/$file"
 		local retval=$?
-		if [[ $retval -ne 0 ]] ; then
-				if (( $retval == 5 )); then
-					echo "$path/$file does not exist!"
-				elif (( $retval == 4 )); then
-					echo "Can not read $path/$file!"
-				fi
-				local break_value=1
+
+		if [[ $retval -ne 0 ]]; then
+			if (( $retval == 5 )); then
+				echo "$path/$file does not exist!"
+			elif (( $retval == 4 )); then
+				echo "Can not read $path/$file!"
+			fi
+			local break_value=1
 		fi
 	done
-	# checks if value is set
-		if declare -p break_value &> /dev/null; then
-			echo "This backup may have been created with the -d option, if so rerun with -d"
-			return 2
-		fi
+
+	# checks if value is set. i.e. passwd/group/shadow file could not be read
+	if declare -p break_value &> /dev/null; then
+		echo "This backup may have been created with the -d option, if so rerun with -d"
+		return 2
+	fi
+
         # read /home/password file or equivalent)
         while read line ; do
                 local user=$(echo $line | awk -F : '{print $1}')
                 local uid=$(echo $line | awk -F : '{print $3}')
                 local gid=$(echo $line | awk -F : '{print $4}')
-		        local password=$(grep -m 1 $user $path/$shadow | awk -F: '{print $2}')
+		local password=$(grep -m 1 $user $path/$shadow | awk -F: '{print $2}')
 		# trying to restore a user with UID =1000 causes issues
                 # if they are not oem. So delete oem first.
                 if [[ $uid -eq 1000 && $user != "oem" ]]; then
@@ -231,21 +267,26 @@ restore_users(){
                 fi
 
                 if ! user_restore=$(restore_user $path $user $uid $gid $password $extpath); then
-			echo "$user_restore"
+			echo "$user_restore"        
 			return 3
 		fi
 	done < ${path}/$passwd
 	return 0
 }
 
+# NOTE: used in backup_sources() function below
+# usage:
+# backup_other_sources <source_path> <ext_path>
 backup_other_sources(){
 	local sourcespath=$1
 	local extpath=$2
+
 	if [ $extpath]; then
 		path=$extpath/etc/apt/sources.list.d
 	else
 		path=/etc/apt/sources.list.d/
 	fi
+
 	if [[ -d $path ]]; then
 		if ! mkdir -p $sourcespath/sources.list.d; then
 			 echo "Couldn't make $sourcespath/sources.list.d"
@@ -279,6 +320,7 @@ backup_other_sources(){
 	fi
 }
 
+# NOTE: used when creating backup in ts_network_backup
 backup_sources(){
 	local sourcespath=$1
 	local path=$2
@@ -356,7 +398,6 @@ restore_partners(){
 	fi
 }
 
-####
 
 backup_apt(){
 	local dpkgfile=$1
@@ -411,6 +452,9 @@ backup_config(){
         return $?
 }
 
+# rsyncs a backup_dir on a remote server to create a backup on the remote machine
+# usage:
+# create_backup <create_path> <remote_user> <remote_host> <srv_path> <backup_dir>
 create_backup(){
         local cpath=$1
 	local user=$2
@@ -421,13 +465,16 @@ create_backup(){
 	return $?
 }
 
+# rsyncs a backup_dir on a remote server to restore data to local machine
+# usage:
+# restore_backup <remote_user> <remote_host> <srv_path> <backup_dir> <restore_path>
 restore_backup(){
         local user=$1
         local host=$2
         local spath=$3
         local backupdir=$4
         local rpath=$5
-                rsync --rsync-path="sudo rsync" -azh --exclude=".gvfs" "${user}@${host}:${spath}/${backupdir}/" "${rpath}/"
+        rsync --rsync-path="sudo rsync" -azh --exclude=".gvfs" "${user}@${host}:${spath}/${backupdir}/" "${rpath}/"
 	return $?
 
 }

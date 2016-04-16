@@ -7,6 +7,7 @@ MAIN_FUNCTIONS="/usr/lib/tstools/ts_functions.sh" # /path/to../
 NB_FUNCTIONS="/usr/lib/tstools/ts_network_backup_functions.sh"
 # Config ends
 source $CONFIG_FILE
+set -x #debugging
 
 help(){
         cat <<EOF
@@ -92,10 +93,7 @@ if [[ -z $1 ]]; then
                 exit 1
         fi
 
-# redirect stderr to /dev/null for the duration of this script
-# as we have our own error messages
-#exec 2>/dev/null
-
+# process positional parameters
 while getopts ":hc:r:l:t:a:A:p:dufFR" option; do
        case $option in
                 h) help
@@ -153,6 +151,7 @@ if [[ $data_only ]]; then
     no_user_passwords="true"
 fi
 
+# if -l was used, make sure user specified a logfile and that it is writeable
 if [[ $use_log ]]; then
 	if [[ ! $logfile ]]; then
 		echo  "You forgot to specify a logfile!"
@@ -166,30 +165,36 @@ if [[ $use_log ]]; then
 	fi
 fi
 
+# the options -c and -r cannot be used together
 if [[ $create_backup  &&  $restore_backup ]]; then
 	write_msg "Only one of the -c or -r options can be used"
 	exit 2
+# either options -c or -r MUST be used
 elif [[ ! $create_backup && ! $restore_backup ]]; then
         write_msg "One of the -c or -r (or -h help) options must  be used. Arguments must be supplied with -c & -r."
         exit 2
+# options -d, -a, and -u cannot be used together
 elif [[ $data_only  &&  $users_and_data_only ]]; then
         write_msg "The -d or -a and -u options are mutually exclusive"
         exit 2
+# -a can only be used with -c
 elif [[ $alt_path && ! $create_backup ]]; then
 	write_msg "-a can only be used with -c"
 	exit 2
+# -A can ONLY be used with -r
 elif [[ $alt_restore_path && ! $restore_backup ]]; then
          write_msg "-A can only be used with -r"
          exit 2
-
+# -a MUST be used with -f
 elif [[ $force_file &&  ! $alt_path ]]; then
 	write_msg "the -a option must be used with -f"
 	exit 2
-
+# cannot add an addendum to ticket number when restoring data (should only be used with -c)
 elif [[ $restore_backup && $addendum ]]; then
         write_msg "-t option is not valid with -r"
         write_msg "Please supply the full name of the directory"
         exit 2
+# all checks passed, proceed to set path
 else
 	# set paths etc
 	if [[ ! $path ]]; then
@@ -199,14 +204,14 @@ else
     fi
 fi
 
-#sanity checks
+# must be run with root privileges
 if ! test_for_root ; then
                 write_msg "Could not proceed!"
                 write_msg "Are you root?"
                 exit 3
 fi
 
-# check to see if path is actually a directory etc
+# check that path is a directory and is readable/writeable
 if [[ $path ]] ; then
 	check_dir_read "$path"
 	error=$?
@@ -229,7 +234,7 @@ if [[ $path ]] ; then
 	fi
 fi
 
-# create backup checks
+# if -c was used, make sure everything is okay
 if [[ $create_backup ]] ; then
 	# test for valid ticket number
 	#N.B. actually tests for 5 digits
@@ -243,16 +248,17 @@ if [[ $create_backup ]] ; then
 			write_msg "Only numbers, letters and _ can be added to a ticket number"
 			write_msg "You do not need to use - it will will be added automatically"
 			exit 3
-        else
-            # add addendum
-            backup_dir="${backup_dir}-${addendum}"
+        	else
+            		# add addendum
+            		backup_dir="${backup_dir}-${addendum}"
 		fi
 	fi
 
-    # if overwriting of backups not forced with -F
+    	# if overwriting of backups not forced with -F
 	if [[  ! $force_overwrite ]]; then
-	write_msg "checking to see if the backup directory already exists..."
-        # leaving off quotes as we doen't want dirs with spaces in name
+		write_msg "checking to see if the backup directory already exists..."
+
+        	# leaving off quotes as we doen't want dirs with spaces in name
 		if check_for_backup_dir $backup_user $backup_host $backup_path $backup_dir; then
 			write_msg "Backup directory already exists!"
 			write_msg "Cowardly refusing to overwrite it"
@@ -260,7 +266,7 @@ if [[ $create_backup ]] ; then
 		fi
 	fi
 
-	# if backup alternate path leave message
+	# if backup alternate path, leave message
 	if [[ $alt_path && ! $force_file || ! $read_only ]] ; then
 		echo "Directory backup was $path" >> "${path}/DIRECTORY_BACKED_UP"
 		write_msg "Directory backup was $path"
@@ -268,7 +274,7 @@ if [[ $create_backup ]] ; then
 	fi
 fi
 
-# restore backup checks
+# if -r was used, make sure everything is okay
 if [[ $restore_backup ]]; then
 	if [[ "$alt_restore_path" && ! $data_only && ! $force_overwrite ]]; then
 	write_msg "-F must be used with -A if -d is not used"
@@ -279,8 +285,10 @@ if [[ $restore_backup ]]; then
 		write_msg "This doesn't look like a valid backup directory, sorry. exiting..."
 		exit 3
 	fi
+
 	echo
-    # leaving off quotes as we doen't want dirs with speaces in name
+
+	# leaving off quotes as we doen't want dirs with speaces in name
 	if ! check_for_backup_dir $backup_user $backup_host $backup_path $backup_dir; then
 		write_msg "Backup directory does not exist"
 		write_msg "Cowardly refusing to restore from non-existant backup"
@@ -288,7 +296,7 @@ if [[ $restore_backup ]]; then
 	fi
 fi
 
-for host in $external_hosts; do
+for host in $external_hosts; do # external_hosts=tsdata in config file
     if [[ $HOSTNAME == $host ]]; then
         if [[ $ext_path || $alt_path || $alt_restore_path ]]; then
             true # do nothing
@@ -303,20 +311,24 @@ done
 
 # if -f (force backup of single file) not used
 if [[ ! $force_file ]]; then
+
 	# ensure path has / on the end
 	if [[ ${path:${#path}-1} != "/" ]]; then
 		path="${path}/"
 	fi
+
 	# Set Common paths
 	if [[ ! $no_user_passwords ]]; then
-        group_file="${path}group"
-	    password_file="${path}passwd"
-	    shadow_file="${path}shadow"
-        gshadow_file="${path}gshadow"
+        	group_file="${path}group"
+	    	password_file="${path}passwd"
+	    	shadow_file="${path}shadow"
+        	gshadow_file="${path}gshadow"
 	fi
+	
+	# if we're backing up packages
 	if [[ ! $no_apt ]]; then
-	    dpkg_file="${path}dpkg.out"
-	    sources_path="${path}apt/"
+	    	dpkg_file="${path}dpkg.out"
+	    	sources_path="${path}apt/"
 	fi
 fi
 
@@ -339,6 +351,7 @@ if [[ $create_backup ]]; then
 
 		aptbackup="$(backup_apt $dpkg_file $ext_path)"
                 aptbackup_return=$?
+
                 if [[ $aptbackup_return -ne 0 ]]; then
 			write_msg "Backing up package files list failed!"
                         write_msg "$aptbackup"
@@ -349,21 +362,26 @@ if [[ $create_backup ]]; then
 		fi
 	fi
 
+	# if -d or -a NOT used (data only), backup users
 	if [[ ! $no_user_passwords ]]; then
+		# test backup of users
 		if ! backup_users_check="$(backup_users_test "$password_file" "$shadow_file" "$group_file" "$gshadow_file")"; then
 			write_msg "$backup_users_check"
 			exit 3
-        else
-            for file in "passwd" "shadow" "group" "gshadow"; do
-                cp $ext_path/etc/$file ${path}/${file}.bak.$(date +%Y%m%d)
-            done
-            if ! user_backup=$(backup_users "$path" "$ext_path");then
+        	else
+			# backup password files
+            		for file in "passwd" "shadow" "group" "gshadow"; do
+                		cp $ext_path/etc/$file ${path}/${file}.bak.$(date +%Y%m%d)
+            		done
+
+			# backup users
+            		if ! user_backup=$(backup_users "$path" "$ext_path");then
 			    write_msg "$user_backup"
 			    exit 3
-		    else
+		    	else
 			    write_msg "$user_backup"
-            fi
-        fi
+            		fi
+        	fi
 	fi
 
 	# backs up /etc, don't run if backing up alternate path or data only
@@ -377,6 +395,7 @@ if [[ $create_backup ]]; then
 	echo "Preparing to rsync network backup..."
         echo "this may take some time..."
 
+	# create backup on server w/ rsync
 	if ! make_backup="$(create_backup "$path" "$backup_user" "$backup_host" "$backup_path" "$backup_dir" )"; then
 		write_msg "$make_backup"
 		exit 2
@@ -388,7 +407,8 @@ if [[ $create_backup ]]; then
 # Restore Backup #
 ##################
 elif [[ $restore_backup ]] ; then
-        # not the same as backup_password_files
+        # backup /etc/passwd, /etc/shadow, /etc/gshadow, /etc/group before proceeding.
+	# this ensures that we can restore users if something goes wrong.
         if ! backup_passwords_check=$(backup_passwords "$ext_path"); then
 		write_msg "$backup_passwords_check"
 		write_msg "Failed to backup password files ..exiting"
@@ -407,6 +427,7 @@ elif [[ $restore_backup ]] ; then
                 exit $restore_check
 	else
 		if [[ ! $no_user_passwords ]];  then
+			echo "no_user_passwords isn't set, so calling restore_users" # debugging
 			if ! restore_users_test=$(restore_users "$path" "$ext_path"); then
 				restore_users_return=$?
 				write_msg "$restore_users_test"
@@ -419,6 +440,8 @@ elif [[ $restore_backup ]] ; then
 					exit 2
 				fi
 			else
+				echo "displaying restore_users_test..."
+				write_msg "$restore_users_test" # debugging
 				write_msg "Restored users"
 			fi
 		fi
@@ -478,6 +501,25 @@ elif [[ $restore_backup ]] ; then
 	write_msg "Backup successfully restored"
 	fi
 
+	# Clean up after ourselves -- leaves backup of /etc in place
+	pkg_files="/home/apt/ /home/dpkg.out"
+	ts_files="/home/ts_passwd /home/ts_shadow /home/ts_group /home/DIRECTORY_BACKED_UP /home/gshadow"
+	bak_files="/home/passwd.bak* /home/shadow.bak* /home/group.bak* /home/gshadow.bak*"
+
+	if [[ ! $data_only ]]; then
+        	if [[ ! $no_apt ]]; then
+            	to_remove="$source_path $dpkg_file $password_file  $shadow_file $group_file"
+        	else
+            	to_remove="$password_file $shadow_file $group_file $ts_files $bak_files $pkg_files"
+        	fi
+        	# runs rm -r on files/dirs
+        	if ! cleanup $to_remove; then
+                	echo "Could not remove $to_remove, you may need to remove these manually. Alternatively they may not have been there in the first place and you should investigate why."
+                	exit 3
+        	fi
+	fi
+
+
 #######################
 # restore backup ends #
 #######################
@@ -489,18 +531,4 @@ else
 	exit 1
 fi
 
-# Clean up after ourselves -- leaves backup of /etc in place
-
-if [[ ! $data_only ]]; then
- 	if [[ ! $no_apt ]]; then
-            to_remove="$source_path $dpkg_file $password_file  $shadow_file $group_file"
-	else
-	    to_remove="$password_file $shadow_file $group_file"
-	fi
-	# runs rm -r on files/dirs
-	if ! cleanup $to_remove; then
-		echo "Could not remove $to_remove, you may need to remove these manually. Alternatively they may not have been there in the first place and you should investigate why."
-		exit 3
-	fi
-fi
 exit 0
