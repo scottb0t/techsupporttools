@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # user functions
-set -x #debugging
+#set -x #debugging
 
 # use this function to determine if user is root
 test_for_root(){

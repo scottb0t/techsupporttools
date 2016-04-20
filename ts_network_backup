@@ -7,7 +7,12 @@ MAIN_FUNCTIONS="/usr/lib/tstools/ts_functions.sh" # /path/to../
 NB_FUNCTIONS="/usr/lib/tstools/ts_network_backup_functions.sh"
 # Config ends
 source $CONFIG_FILE
-set -x #debugging
+#set -x #debugging
+
+# Restoring packages causes more issues than it fixes. We may try to add this to a later version
+# These two lines should stop the package restore feature from ever running
+no_apt="true"
+users_and_data_only="true"
 
 help(){
         cat <<EOF
