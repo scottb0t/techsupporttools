@@ -288,7 +288,7 @@ if [[ $restore_backup ]]; then
 
 	echo
 
-	# leaving off quotes as we doen't want dirs with speaces in name
+	# leaving off quotes as we doen't want dirs with spaces in name
 	if ! check_for_backup_dir $backup_user $backup_host $backup_path $backup_dir; then
 		write_msg "Backup directory does not exist"
 		write_msg "Cowardly refusing to restore from non-existant backup"
@@ -337,7 +337,8 @@ fi
 # Create Backup #
 #################
 
-if [[ $create_backup ]]; then
+	if [[ $create_backup ]]; then
+
 
 	# unless no_apt is set back up record of packages installed
 	if [[ ! $no_apt ]]; then
@@ -364,6 +365,13 @@ if [[ $create_backup ]]; then
 
 	# if -d or -a NOT used (data only), backup users
 	if [[ ! $no_user_passwords ]]; then
+		# Check if ts_* files exist
+		if ! $(ts_files_check "$ext_path" ) ; then
+			echo ts_passwd ts_shadow ts_group files already exist on this computer
+			echo These files can cause unexpected behavior			
+			echo Please remove these files before creating a new backup
+			exit 3
+		fi
 		# test backup of users
 		if ! backup_users_check="$(backup_users_test "$password_file" "$shadow_file" "$group_file" "$gshadow_file")"; then
 			write_msg "$backup_users_check"
@@ -506,7 +514,7 @@ elif [[ $restore_backup ]] ; then
 	ts_files="/home/ts_passwd /home/ts_shadow /home/ts_group /home/DIRECTORY_BACKED_UP /home/gshadow"
 	bak_files="/home/passwd.bak* /home/shadow.bak* /home/group.bak* /home/gshadow.bak*"
 
-	if [[ ! $data_only ]]; then
+	if [[ ! $data_only ]] ; then
         	if [[ ! $no_apt ]]; then
             	to_remove="$source_path $dpkg_file $password_file  $shadow_file $group_file"
         	else

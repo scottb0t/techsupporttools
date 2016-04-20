@@ -21,6 +21,18 @@ check_for_backup_dir(){
 	fi
 }
 
+# This function checks if the ts_* files already exist in home
+# If they do we should remove them before completing the backup
+# check if ts_* files already exist on the machine
+ts_files_check(){
+	for file in $ext_path/home/ts_passwd $ext_path/home/ts_shadow $ext_path/home/ts_group ; do
+		if [[ -e $file ]] ; then
+			echo $file exists. 
+			return 1
+		fi
+	done
+	return 0
+}
 # test function that checks that we are able to backup files before proceeding
 # this function returns 3 if any files passed to this function cannot be written to (check_file_write () in ts_functions.sh)
 # usage:
