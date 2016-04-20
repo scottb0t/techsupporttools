@@ -521,9 +521,9 @@ elif [[ $restore_backup ]] ; then
 
 	if [[ ! $data_only ]] ; then
         	if [[ ! $no_apt ]]; then
-            	to_remove="$source_path $dpkg_file $password_file  $shadow_file $group_file"
-        	else
             	to_remove="$password_file $shadow_file $group_file $ts_files $bak_files $pkg_files"
+        	else
+            	to_remove="$source_path $dpkg_file $password_file  $shadow_file $group_file"
         	fi
         	# runs rm -r on files/dirs
         	if ! cleanup $to_remove; then
