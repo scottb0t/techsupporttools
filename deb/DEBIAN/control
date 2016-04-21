@@ -1,0 +1,11 @@
+Package: fg-tstools
+Version: 0.2.00
+Architecture: all
+Maintainer: Paul Munday <paulm@freegeek.org>
+Installed-Size: 48
+Depends: apt, openssh-client, rsync, lsb-release
+Section: public/misc
+Priority: extra
+Homepage: http://tsbackup.fglan
+Description: Tools for Free Geek Tech Support Techs
+ Tools for Free Geek Tech Support Techs including ts_network_backup

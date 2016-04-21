@@ -1,0 +1,11 @@
+9f59059e20b60f9eec8f86a121d47168  usr/bin/ts_getid
+61a538d305f50dd17352f25df8ffb953  usr/bin/ts_identify_backups
+2492e93a305473a20ec10edd45bf38d5  usr/bin/ts_mount
+b062f6fa592529f7fc0cbd553cb31f35  usr/bin/ts_network_backup
+198594ad55763cfe8c0f1d8b266794ec  usr/bin/ts_rechown
+7762a4c85a64de4a6c8937e0485e29d6  usr/lib/tstools/ts_exclude.txt
+3472bba24df479762823691a83de7161  usr/lib/tstools/ts_functions.sh
+20c5cdb2c686d56019284d2cec6ac962  usr/lib/tstools/ts_network_backup_functions.sh
+62979b7c157c27ebb000476d36342bfd  usr/share/doc/fg-tstools/changelog.gz
+29c4e782c9d5453f03321bbe089b0adf  usr/share/doc/fg-tstools/copyright
+7762a4c85a64de4a6c8937e0485e29d6  usr/share/doc/fg-tstools/ts_exclude.txt
