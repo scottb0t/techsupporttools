@@ -9,11 +9,6 @@ NB_FUNCTIONS="/usr/lib/tstools/ts_network_backup_functions.sh"
 source $CONFIG_FILE
 #set -x #debugging
 
-# Restoring packages causes more issues than it fixes. We may try to add this to a later version
-# These two lines should stop the package restore feature from ever running
-no_apt="true"
-users_and_data_only="true"
-
 help(){
         cat <<EOF
 Usage: ts_network_backup  [OPTION(S)]
@@ -102,51 +97,57 @@ if [[ -z $1 ]]; then
 while getopts ":hc:r:l:t:a:A:p:dufFR" option; do
        case $option in
                 h) help
-                   exit 0
-                ;;
+                            exit 0
+                	    ;;
                 c)  create_backup="true"
-                    ticket_number="$OPTARG"
+                            ticket_number="$OPTARG"
 		            backup_dir="$(date +%Y%m%d)-${ticket_number}"
+			    # Added to disable package backup
+			    no_apt="true"
+			    users_and_data_only="true"
 		            ;;
-		        r)  restore_backup="true"
-                    backup_dir="$OPTARG"
+		r)  restore_backup="true"
+                            backup_dir="$OPTARG"
+			    # Added to disable package backup
+			    no_apt="true"
+			    users_and_data_only="true"
 		            ;;
-		        d)  data_only="true"
-                    ;;
+		d)  data_only="true"
+                            ;;
                 u)  no_apt="true"
-                    users_and_data_only="true"
-                    ;;
-		        l)  use_log="true"
+                	    users_and_data_only="true"
+                    	    ;;
+		l)  use_log="true"
 		            logfile="$OPTARG" # N.B. truly global read inside function
 		            ;;
-		        t)  addendum=$OPTARG
+		t)  addendum=$OPTARG
 		            ;;
-		        a)  data_only="true"
+		a)  data_only="true"
 		            alt_path="true"
 		            path="$OPTARG"
 		            ;;
-		        A)  path="$OPTARG"
+		A)  path="$OPTARG"
 		            alt_restore_path="true"
 		            ;;
-		        p) 
-                    cut_path=$(echo "$OPTARG" |sed -r -e 's:/home/?$::' -e 's/\/*$//')
+		p) 
+                            cut_path=$(echo "$OPTARG" |sed -r -e 's:/home/?$::' -e 's/\/*$//')
 		            ext_path=$cut_path
 		            path="${cut_path}/home"
 		            chroot_path="chroot $ext_path"
 		            ;;
-		        f)  force_file="true"
+		f)  force_file="true"
 		            ;;
-		        F)  force_overwrite="true"
+		F)  force_overwrite="true"
 		            ;;
                 R)  read_only="true"
-                    data_only="true"
-                    ;;
+                            data_only="true"
+                    	    ;;
                 \?) write_msg "Invalid option: -$OPTARG" >&2
-      		        exit 1
-      		        ;;
-    		    :)  write_msg "Option -$OPTARG requires an argument." >&2
-      		        exit 1
-      		        ;;
+      		            exit 1
+      		            ;;
+    		:)  write_msg "Option -$OPTARG requires an argument." >&2
+      		            exit 1
+      		            ;;
 		esac
 done
 
