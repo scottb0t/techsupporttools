@@ -102,15 +102,9 @@ while getopts ":hc:r:l:t:a:A:p:dufFR" option; do
                 c)  create_backup="true"
                             ticket_number="$OPTARG"
 		            backup_dir="$(date +%Y%m%d)-${ticket_number}"
-			    # Added to disable package backup
-			    no_apt="true"
-			    users_and_data_only="true"
 		            ;;
 		r)  restore_backup="true"
                             backup_dir="$OPTARG"
-			    # Added to disable package backup
-			    no_apt="true"
-			    users_and_data_only="true"
 		            ;;
 		d)  data_only="true"
                             ;;
@@ -150,6 +144,12 @@ while getopts ":hc:r:l:t:a:A:p:dufFR" option; do
       		            ;;
 		esac
 done
+
+# ****disable package backups until we can rework it****
+if [[ ! $data_only ]] ; then
+	no_apt="true"
+	users_and_data_only="true"
+fi
 
 # process options
 if [[ $data_only ]]; then
